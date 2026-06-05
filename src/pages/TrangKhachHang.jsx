@@ -31,6 +31,7 @@ function TrangKhachHang() {
 
   // Trạng thái lưu danh sách phản hồi từ hệ thống trả về cho User xem
   const [danhSachPhanHoiAdmin, setDanhSachPhanHoiAdmin] = useState([]);
+  const [danhSachPhanHoiBaoVe, setDanhSachPhanHoiBaoVe] = useState([]); // Thêm trạng thái nhận của Bảo Vệ
 
   // --- ⏱️ HÀM KIỂM TRA VÀ TỰ ĐỘNG XÓA YÊU CẦU ĐẶT TRƯỚC QUÁ 30 PHÚT ---
   const kiemTraVaXoaSlotHetHan = useCallback(async (danhSachSlots) => {
@@ -54,12 +55,19 @@ function TrangKhachHang() {
     }
   }, []);
 
-  // --- 📥 TẢI DANH SÁCH PHẢN HỒI CỦA ADMIN VỀ CHO USER XEM ---
+  // --- 📥 TẢI DANH SÁCH PHẢN HỒI CỦA ADMIN + BẢO VỆ VỀ CHO USER XEM ---
   const fetchUserFeedbacks = async () => {
     try {
       const res = await axios.get(API_MESSAGES);
-      const dataKhieuNai = (res.data || []).filter(item => item.loaiTinNhan === "khieu_nai");
+      const allData = res.data || [];
+      
+      // Lọc tin khiếu nại gửi Admin như cũ
+      const dataKhieuNai = allData.filter(item => item.loaiTinNhan === "khieu_nai");
       setDanhSachPhanHoiAdmin(dataKhieuNai.reverse()); 
+
+      // TÍNH NĂNG THÊM: Lọc tin nhắn gửi bảo vệ (chat_user_guard) để xem phản hồi hiện trường
+      const dataBaoVe = allData.filter(item => item.loaiTinNhan === "chat_user_guard");
+      setDanhSachPhanHoiBaoVe(dataBaoVe.reverse());
     } catch (error) {
       console.error("Lỗi tải phản hồi hệ thống:", error);
     }
@@ -210,6 +218,7 @@ function TrangKhachHang() {
       setGuiBaoVeThanhCong(true);
       setNoiDungBaoVe("");
       setLoaiXeBaoVe("");
+      fetchUserFeedbacks(); // Reload lại để cập nhật danh sách ngay lập tức
       setTimeout(() => setGuiBaoVeThanhCong(false), 3000);
     } catch (error) {
       console.error("Lỗi gửi tin nhắn cho bảo vệ:", error);
@@ -263,7 +272,7 @@ function TrangKhachHang() {
             🚀 SMART PARKING PLATFORM
           </h1>
           <p className="text-muted small mx-auto" style={{ maxWidth: '500px', color: '#64748b', letterSpacing: '1px' }}>
-           <span className="text-warning fw-bold">Dich vụ đặt chỗ trước sẽ bị hủy sau 30 phút nếu chưa check-in.</span> 
+           <span className="text-warning fw-bold">Dich vụ đặt chỗ trước sẽ bị hủy sau 30 phút nếu chưa check-in.</span> 
           </p>
         </div>
 
@@ -438,7 +447,6 @@ function TrangKhachHang() {
                 <span></span> Phản Ánh Tới Bảo Vệ (Hiện Trường)
               </h5>
         
-              
               <Form onSubmit={handleGuiBaoVe}>
                 {guiBaoVeThanhCong && <Alert variant="success" className="py-2 border-0 shadow-sm rounded-3 bg-success text-white small">✔️ Đã gửi tín hiệu định vị thành công tới đội tuần tra!</Alert>}
                 <Form.Group className="mb-3">
@@ -457,7 +465,6 @@ function TrangKhachHang() {
                 <span></span> Góp Ý Chất Lượng (Ban Quản Trị)
               </h5>
               
-              
               <Form onSubmit={handleGuiAdmin}>
                 {guiAdminThanhCong && <Alert variant="success" className="py-2 border-0 shadow-sm rounded-3 bg-info text-dark small fw-bold">✔️ Ý kiến đóng góp đã được ghi nhận trên hệ thống trung tâm!</Alert>}
                 <Form.Group className="mb-3">
@@ -469,12 +476,52 @@ function TrangKhachHang() {
           </Col>
         </Row>
 
-        {/* ================= 📩 LỊCH SỬ NHẬN PHẢN HỒI BAN QUẢN TRỊ ================= */}
-        <Row className="mt-5">
-          <Col md={12}>
-            <Card className="p-4 border-0 shadow-lg" style={{ backgroundColor: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.07)' }}>
+        {/* ================= 📩 LỊCH SỬ NHẬN PHẢN HỒI (Hộp thư Bảo vệ & Admin) ================= */}
+        <Row className="mt-5 g-4">
+          {/* Hộp Thư Đội Bảo Vệ */}
+          <Col md={6}>
+            <Card className="p-4 border-0 shadow-lg h-100" style={{ backgroundColor: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.07)' }}>
+              <h5 className="fw-bold text-danger mb-3 d-flex align-items-center gap-2" style={{fontSize: '1.1rem'}}>
+                <span>🚨</span> Nhật Ký Hiện Trường (Đội Bảo Vệ)
+              </h5>
+              {danhSachPhanHoiBaoVe.length === 0 ? (
+                <p className="text-muted small m-0 fst-italic p-3 rounded-3 text-center" style={{backgroundColor: '#1e293b'}}>Chưa có phản ánh hiện trường nào.</p>
+              ) : (
+                <div style={{ maxHeight: '320px', overflowY: 'auto', paddingRight: '6px' }} className="custom-scrollbar">
+                  {danhSachPhanHoiBaoVe.map((item, idx) => (
+                    <div key={item.id || idx} className="p-3 mb-3 border-0 shadow-sm" style={{ borderRadius: '16px', backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.03)' }}>
+                      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <small className="text-muted fw-semibold d-flex align-items-center gap-1" style={{fontSize: '11px'}}>
+                          <span>⏱</span> {item.ngayTao ? new Date(item.ngayTao).toLocaleString('vi-VN') : 'Không rõ'}
+                        </small>
+                        {item.trangThaiXuly === "Đã xử lý" || item.trangThai === "Đã phản hồi" ? (
+                          <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-3" style={{fontSize: '10px'}}>Đã xử lý</span>
+                        ) : (
+                          <span className="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded-3" style={{fontSize: '10px'}}>Đang điều phối</span>
+                        )}
+                      </div>
+                      <p className="m-0 text-white mb-2" style={{fontSize: '0.9rem'}}><strong className="text-danger">Yêu cầu:</strong> "{item.noiDung}"</p>
+                      
+                      {(item.phanHoiBaoVe || item.replyMessage || item.phanHoiAdmin) && (
+                        <div className="mt-3 p-3 rounded-3" style={{ backgroundColor: '#0f172a', borderLeft: '3px solid #ef4444' }}>
+                          <small className="fw-bold d-block mb-1" style={{ fontSize: '0.75rem', color: '#f87171' }}>
+                            ĐỘI TUẦN TRA ĐÁP ỨNG:
+                          </small>
+                          <span className="small text-light fst-italic">"{item.phanHoiBaoVe || item.replyMessage || item.phanHoiAdmin}"</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </Col>
+
+          {/* Hộp Thư Ban Quản Trị */}
+          <Col md={6}>
+            <Card className="p-4 border-0 shadow-lg h-100" style={{ backgroundColor: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.07)' }}>
               <h5 className="fw-bold text-warning mb-3 d-flex align-items-center gap-2" style={{fontSize: '1.1rem'}}>
-                <span></span> Hộp Thư Phản Hồi Trực Tuyến
+                <span>📩</span> Hộp Thư Phản Hồi (Ban Quản Trị)
               </h5>
               {danhSachPhanHoiAdmin.length === 0 ? (
                 <p className="text-muted small m-0 fst-italic p-3 rounded-3 text-center" style={{backgroundColor: '#1e293b'}}>Chưa có tin nhắn phản hồi nào từ Ban Quản Trị.</p>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Nav } from 'react-bootstrap'; 
+import { Container, Nav, Button } from 'react-bootstrap'; 
 import { useNavigate } from 'react-router-dom'; 
 import axios from 'axios';
 import { API_VEHICLES, API_LOTS } from '../constants/api';
@@ -104,7 +104,6 @@ function TrangAdmin() {
   };
 
   return (
-    // 🟢 ĐÃ FIX LỖI: Đổi position-absolute thành position-relative để trả layout về luồng co giãn tự nhiên của React
     <div style={styles.pageContainer} className="text-white w-100 position-relative m-0">
       <Container className="pb-5 pt-3">
         {/* Header Section */}
@@ -113,6 +112,14 @@ function TrangAdmin() {
             <h1 className="fw-black mb-1 tracking-tight" style={styles.headerGradient}>
                HỆ THỐNG QUẢN TRỊ ADMIN
             </h1>
+            {/* 🔑 ĐÃ ĐỔI ĐƯỜNG DẪN KHỚP VỚI APP.JSX CỦA SẾP */}
+            <Button 
+              variant="warning" 
+              className="fw-bold mt-2"
+              onClick={() => navigate('/admin/dang-ky-tong')}
+            >
+              🔑 Vào Trang Đăng Ký Tổng
+            </Button>
           </div>
           
           {/* Navigation Tabs cải tiến cực mượt */}

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Container, Button, Row, Col, Card } from 'react-bootstrap';
 import axios from 'axios'; 
 
-// 🔑 IMPORT ĐẦY ĐỦ CẢ 3 ENDPOINT CỦA SẾP
-import { API_VEHICLES, API_LOTS, API_LOTSS } from '../constants/api'; 
+// 🔑 IMPORT ĐẦY ĐỦ CÁC ENDPOINT CỦA SẾP
+import { API_VEHICLES, API_LOTS, API_LOTSS, API_MESSAGES } from '../constants/api'; 
 import { layXeDangInBai } from '../utils/securityHelpers'; 
 import VehicleTable from '../components/Security/VehicleTable';
 import ModalCheckIn from '../components/Security/ModalCheckIn';
@@ -11,7 +11,9 @@ import ModalCheckIn from '../components/Security/ModalCheckIn';
 function TrangSecurity() {
   const [danhSachXe, setDanhSachXe] = useState([]);
   const [danhSachBai, setDanhSachBai] = useState([]);
-  const [danhSachSlotsOnline, setDanhSachSlotsOnline] = useState([]); // 👈 THÊM: Lưu data đặt chỗ từ API_LOTSS
+  const [danhSachSlotsOnline, setDanhSachSlotsOnline] = useState([]); // 👈 Lưu data đặt chỗ từ API_LOTSS
+  const [danhSachTinNhan, setDanhSachTinNhan] = useState([]);         // 👈 Lưu tin phản ánh của khách gửi bảo vệ
+  const [noiDungRepForm, setNoiDungRepForm] = useState({});           // 👈 Textarea gõ phản hồi theo dòng tin
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -27,7 +29,7 @@ function TrangSecurity() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLoaiXe, setFilterLoaiXe] = useState("Tất cả");
 
-  // 🔄 HÀM TẢI DỮ LIỆU ĐỒNG BỘ TỪ CẢ 3 BẢNG API
+  // 🔄 HÀM TẢI DỮ LIỆU ĐỒNG BỘ TỪ CẢ 4 BẢNG API (ĐÃ TÍCH HỢP TRUNG TÂM PHẢN ÁNH)
   const fetchData = async () => {
     setBangGiaAdmin({
       "Ô tô": Number(localStorage.getItem('giaOTo')) || 20000,
@@ -37,15 +39,20 @@ function TrangSecurity() {
 
     setLoading(true);
     try {
-      // Kéo đồng thời cả Xe, Hạ tầng gốc, và Danh sách Slots đặt online
-      const [resXe, resBai, resSlots] = await Promise.all([
+      // Kéo đồng thời cả Xe, Hạ tầng gốc, Danh sách Slots và Hộp thư chat hiện trường
+      const [resXe, resBai, resSlots, resMessages] = await Promise.all([
         axios.get(API_VEHICLES),
         axios.get(API_LOTS),
-        axios.get(API_LOTSS) 
+        axios.get(API_LOTSS),
+        axios.get(API_MESSAGES)
       ]);
       setDanhSachXe(resXe.data || []);
       setDanhSachBai(resBai.data || []);
-      setDanhSachSlotsOnline(resSlots.data || []); // Cập nhật danh sách đặt chỗ thực tế
+      setDanhSachSlotsOnline(resSlots.data || []); 
+
+      // Lọc lấy các tin nhắn định danh gửi riêng bảo vệ ('chat_user_guard')
+      const tinCuaGuard = (resMessages.data || []).filter(item => item.loaiTinNhan === "chat_user_guard");
+      setDanhSachTinNhan(tinCuaGuard.reverse()); // Đẩy tin phản ánh mới nhất lên đầu bãi
     } catch (error) {
       console.error("Lỗi đồng bộ tích hợp hệ thống phía bảo vệ:", error);
     } finally {
@@ -172,6 +179,35 @@ function TrangSecurity() {
     }
   };
 
+  // 🚨 XỬ LÝ BẢO VỆ PHẢN HỒI TIN NHẮN HIỆN TRƯỜNG LÊN MOCKAPI
+  const handleBaoVeRep = async (tinNhanId) => {
+    const textRep = noiDungRepForm[tinNhanId];
+    if (!textRep || !textRep.trim()) {
+      alert("Vui lòng gõ nội dung phản hồi hiện trường trước khi gửi!");
+      return;
+    }
+
+    try {
+      const tinGoc = danhSachTinNhan.find(t => t.id === tinNhanId);
+      const payloadCapNhat = {
+        ...tinGoc,
+        trangThai: "Đã phản hồi",
+        phanHoiBaoVe: textRep.trim(),
+        thoiGianPhanHoi: new Date().toISOString()
+      };
+
+      // Đè dữ liệu phản hồi vào đúng ID tin nhắn thông qua PUT method
+      await axios.put(`${API_MESSAGES}/${tinNhanId}`, payloadCapNhat);
+      
+      setNoiDungRepForm(prev => ({ ...prev, [tinNhanId]: "" }));
+      await fetchData(); // Đồng bộ lại giao diện bảo vệ tức thì
+      alert("Đã gửi tín hiệu phản hồi thành công tới màn hình khách hàng!");
+    } catch (error) {
+      console.error("Lỗi khi bảo vệ phản hồi tin nhắn:", error);
+      alert("Gửi phản hồi thất bại!");
+    }
+  };
+
   return (
     <Container className="pb-5" style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", color: '#e2e8f0' }}>
       
@@ -187,7 +223,6 @@ function TrangSecurity() {
         }}>
           🛡️ SMARTPARK SECURITY GATE
         </h2>
-        
       </div>
 
       <Row className="g-4 mb-4 align-items-stretch">
@@ -245,6 +280,68 @@ function TrangSecurity() {
         </Col>
       </Row>
 
+      {/* 🚨 TRUNG TÂM PHẢN ÁNH HIỆN TRƯỜNG TỪ USER - PHÂN HỆ BẢO VỆ NHẬN VÀ PHẢN HỒI LẠI */}
+      <div className="mb-5 p-4 rounded-4 shadow-sm border-0" style={{ 
+        backgroundColor: '#0f172a', 
+        borderLeft: '4px solid #ef4444',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+      }}>
+        <h6 className="text-danger fw-bold mb-3 d-flex align-items-center gap-2" style={{ fontSize: '0.9rem', letterSpacing: '0.5px' }}>
+          <span>🚨</span> HỘP THƯ YÊU CẦU / PHẢN ÁNH HIỆN TRƯỜNG CỦA KHÁCH HÀNG
+        </h6>
+
+        {danhSachTinNhan.length === 0 ? (
+          <p className="text-muted small m-0 fst-italic">Hiện tại không có phản ánh hiện trường nào từ khách hàng.</p>
+        ) : (
+          <Row className="g-3" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+            {danhSachTinNhan.map((tin) => (
+              <Col md={6} key={tin.id}>
+                <div className="p-3 rounded-3" style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <small className="text-info fw-bold" style={{ fontSize: '11px' }}>📍 Cơ sở: {tin.coSo || "Chưa rõ"}</small>
+                    {tin.trangThai === "Đã phản hồi" ? (
+                      <span className="badge bg-success-subtle text-success border border-success-subtle" style={{ fontSize: '10px' }}>Đã giải quyết</span>
+                    ) : (
+                      <span className="badge bg-danger text-white px-2 py-0.5 rounded-2 animate-pulse" style={{ fontSize: '10px' }}>Chưa xử lý</span>
+                    )}
+                  </div>
+
+                  <p className="m-0 text-white small mb-2">
+                    <strong className="text-warning">Khách báo:</strong> "{tin.noiDung}"
+                  </p>
+                  <small className="text-muted d-block mb-3" style={{ fontSize: '10px' }}>⏱ Gửi lúc: {new Date(tin.ngayTao).toLocaleString('vi-VN')}</small>
+
+                  {tin.trangThai === "Đã phản hồi" ? (
+                    <div className="p-2 rounded-3" style={{ backgroundColor: '#0f172a', borderLeft: '3px solid #10b981' }}>
+                      <small className="text-success fw-bold d-block" style={{ fontSize: '11px' }}>Nội dung đã rep:</small>
+                      <span className="text-light small fst-italic">"{tin.phanHoiBaoVe}"</span>
+                    </div>
+                  ) : (
+                    <div className="d-flex gap-2 mt-2">
+                      <input 
+                        type="text" 
+                        placeholder="Nhập nội dung xử lý (VD: Đội an ninh đang ra kiểm tra)..." 
+                        className="form-control form-control-sm text-white border-0 shadow-none"
+                        style={{ backgroundColor: '#0f172a', borderRadius: '8px', fontSize: '0.8rem' }}
+                        value={noiDungRepForm[tin.id] || ""}
+                        onChange={(e) => setNoiDungRepForm({ ...noiDungRepForm, [tin.id]: e.target.value })}
+                      />
+                      <button 
+                        onClick={() => handleBaoVeRep(tin.id)}
+                        className="btn btn-sm btn-danger fw-bold"
+                        style={{ borderRadius: '8px', fontSize: '0.8rem', minWidth: '70px' }}
+                      >
+                        Gửi Rep
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </div>
+
       {/* 📅 DANH SÁCH XE ĐÃ ĐẶT CHỖ ONLINE - BIẾN THÀNH COCKPIT LIVE STREAM */}
       <div className="mb-5 p-4 rounded-4 shadow-sm border-0" style={{ 
         backgroundColor: '#0f172a', 
@@ -283,7 +380,7 @@ function TrangSecurity() {
           </div>
         ) : (
           <div className="text-muted fst-italic small d-flex align-items-center gap-2">
-         
+             Không có lượt đặt chỗ online nào đang chờ.
           </div>
         )}
       </div>
@@ -328,6 +425,13 @@ function TrangSecurity() {
       <style>{`
         @keyframes ping {
           75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .5; }
         }
       `}</style>
     </Container>

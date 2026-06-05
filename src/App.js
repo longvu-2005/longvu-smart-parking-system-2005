@@ -1,14 +1,15 @@
-import React, { useState } from 'react'; // 👈 Giữ nguyên việc xóa useEffect thừa để sạch WARNING
+import React, { useState } from 'react'; // Giữ nguyên việc xóa useEffect thừa để sạch WARNING
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { Container, Navbar, Nav, Button } from 'react-bootstrap';
 import TrangKhachHang from './pages/TrangKhachHang';
 import TrangAdmin from './pages/TrangAdmin';
 import TrangSecurity from './pages/TrangSecurity';
 import TrangLogin from './pages/TrangLogin';
+import TrangQuenMatKhau from './pages/TrangQuenMatKhau';
+import TrangDangKyUser from './pages/TrangDangKyUser'; 
 
-// 👈 ĐƯỜNG DẪN ĐÚNG: Đi từ dấu chấm "./" thẳng vào "components"
 import TrangDangKyTong from './components/Admin/rangDangKyTong';
-import Footer from './pages/Footer'; // 🟢 Đã Import Footer dùng chung
+import Footer from './pages/Footer'; 
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
@@ -82,10 +83,15 @@ function App() {
         </Navbar>
 
         {/* HỆ THỐNG ĐIỀU HƯỚNG VÀ BẢO VỆ ROUTE (AUTHORIZATION) */}
-        {/* 🟢 KHỐI NỘI DUNG CHÍNH: Cấp flexGrow: 1 để chiếm trọn không gian, tự động dồn Footer xuống đáy bãi đỗ */}
         <div style={{ flexGrow: 1, width: '100%' }}>
           <Routes>
             
+            {/* 🚀 Các route công khai (Ai cũng vào được) */}
+            <Route path="/dang-ky-user" element={<TrangDangKyUser />} />
+            
+            {/* 🟢 ĐÃ SỬA: Bốc thẻ này từ dòng 39 quăng vào đây nằm gọn gàng trong <Routes> */}
+            <Route path="/quen-mat-khau" element={<TrangQuenMatKhau />} />
+
             {/* 1. TRANG KHÁCH HÀNG: Phải có quyền USER */}
             <Route 
               path="/" 
@@ -99,7 +105,6 @@ function App() {
             />
 
             {/* ROUTE MỚI: TRANG ĐĂNG KÝ TỔNG (NẰM TRONG PHÂN HỆ ADMIN) */}
-            {/* Nếu cố tình vào link này mà không phải ADMIN, hệ thống tự đá ra trang chủ / trang login */}
             <Route 
               path="/admin/dang-ky-tong" 
               element={userRole === 'ADMIN' ? <TrangDangKyTong /> : <Navigate to="/admin" />} 
@@ -111,12 +116,12 @@ function App() {
               element={userRole === 'SECURITY' ? <TrangSecurity /> : <TrangLogin requiredRole="SECURITY" onLoginSuccess={handleLoginSuccess} />} 
             /> 
 
-            {/* Tự động chuyển hướng nếu gõ sai URL */}
+            {/* Tự động chuyển hướng nếu gõ sai URL - Phải luôn ở đáy cùng */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
 
-        {/* 🟢 FOOTER CHUẨN: Đứng độc lập cuối cùng, không lo bị đè lớp */}
+        {/* 🟢 FOOTER CHUẨN */}
         <Footer />
 
       </div>

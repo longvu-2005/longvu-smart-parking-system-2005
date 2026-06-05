@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Table, Badge } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom'; // 👈 Thêm useNavigate để làm nút Back
+import { useNavigate } from 'react-router-dom'; // Thêm useNavigate để làm nút Back
 import axios from 'axios';
 import { API_USERS } from '../../constants/api';
 
 function TrangDangKyTong() {
-  const navigate = useNavigate(); // 👈 Khai báo hook điều hướng
+  const navigate = useNavigate(); // Khai báo hook điều hướng
   
   const [danhSachUser, setDanhSachUser] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -89,7 +89,7 @@ function TrangDangKyTong() {
         <Button 
           variant="outline-light" 
           className="rounded-pill px-4 fw-bold shadow-sm"
-          onClick={() => navigate('/admin')} // 👈 Ấn phát bay ngược về Trang Quản Lý luôn
+          onClick={() => navigate('/admin')} // Ấn phát bay ngược về Trang Quản Lý luôn
         >
           ⬅️ Quay Lại Trang Quản Lý
         </Button>
@@ -182,6 +182,7 @@ function TrangDangKyTong() {
                   <tr style={{ color: '#94a3b8' }}>
                     <th>Tài Khoản</th>
                     <th>Họ Tên</th>
+                    <th>Mật Khẩu</th> {/* 👈 THÊM CỘT TIÊU ĐỀ MỚI */}
                     <th>Vai Trò (Role)</th>
                     <th>Ngày Cấp Nick</th>
                   </tr>
@@ -189,13 +190,17 @@ function TrangDangKyTong() {
                 <tbody>
                   {danhSachUser.length === 0 ? (
                     <tr>
-                      <td colSpan="4" className="text-secondary py-4">Chưa có tài khoản nào được tạo!</td>
+                      <td colSpan="5" className="text-secondary py-4">Chưa có tài khoản nào được tạo!</td>
                     </tr>
                   ) : (
                     danhSachUser.map(user => (
                       <tr key={user.id} style={{ borderBottom: '1px solid #334155' }}>
                         <td className="fw-bold text-info">{user.taiKhoan}</td>
                         <td>{user.hoTen}</td>
+                        
+                        {/* 👈 HIỂN THỊ MẬT KHẨU TRỰC TIẾP TẠI ĐÂY */}
+                        <td className="text-warning font-monospace fw-bold">{user.matKhau}</td>
+                        
                         <td>
                           <Badge 
                             bg={user.role === 'Admin' ? 'danger' : user.role === 'Security' ? 'warning' : 'success'} 

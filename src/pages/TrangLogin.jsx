@@ -1,25 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom'; // 👈 Cần import hook này để chuyển sang trang mới
 import axios from 'axios';
 
 import { API_USERS } from '../constants/api'; 
 
 function TrangLogin({ requiredRole, onLoginSuccess }) {
+  const navigate = useNavigate(); // 👈 Khai báo để dùng hàm điều hướng
   const [taiKhoan, setTaiKhoan] = useState("");
   const [matKhau, setMatKhau] = useState("");
   const [loiDangNhap, setLoiDangNhap] = useState("");
   const [danhSachTaiKhoan, setDanhSachTaiKhoan] = useState([]);
 
-  // Fetch danh sách tài khoản từ API
+  // Fetch danh sách tài khoản từ API để so khớp đăng nhập
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get(API_USERS);
+      setDanhSachTaiKhoan(res.data);
+    } catch (error) {
+      console.error("Lỗi kết nối dữ liệu tài khoản:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(API_USERS);
-        setDanhSachTaiKhoan(res.data);
-      } catch (error) {
-        console.error("Lỗi kết nối dữ liệu tài khoản:", error);
-      }
-    };
     fetchUsers();
   }, []);
 
@@ -29,8 +32,7 @@ function TrangLogin({ requiredRole, onLoginSuccess }) {
     const usernameNhap = taiKhoan.trim();
     const passwordNhap = matKhau.trim();
 
-    // 1. TÀI KHOẢN ADMIN CHÍNH (Cứu cánh khi mất dữ liệu hệ thống)
-
+    // 1. TÀI KHOẢN ADMIN CHÍNH (Cứu cảnh khi mất dữ liệu hệ thống)
     const SUPER_ADMIN_USER = "Longmaichat";
     const SUPER_ADMIN_PASS = "ongvuac1"; 
 
@@ -40,12 +42,11 @@ function TrangLogin({ requiredRole, onLoginSuccess }) {
       passwordNhap === SUPER_ADMIN_PASS
     ) {
       onLoginSuccess("ADMIN");
-      return; // Khớp tài khoản tối cao thì cho vào luôn, dừng hàm xử lý bên dưới
+      return; 
     }
 
-    // 2. Nếu không phải Super Admin -> Tiến hành so khớp với dữ liệu từ API của sếp
+    // 2. Nếu không phải Super Admin -> Tiến hành so khớp với dữ liệu từ API
     const taiKhoanHopLe = danhSachTaiKhoan.find(user => {
-      // Chuẩn hóa role về chữ viết thường để so sánh không sợ lệch chữ Hoa - Thường (Admin vs ADMIN)
       const roleAPI = user.role ? user.role.toUpperCase() : "";
       const roleYeuCau = requiredRole.toUpperCase();
 
@@ -57,7 +58,6 @@ function TrangLogin({ requiredRole, onLoginSuccess }) {
     });
 
     if (taiKhoanHopLe) {
-      // Đồng bộ trả về đúng định dạng role viết hoa để khớp với logic App.jsx của sếp
       onLoginSuccess(requiredRole.toUpperCase()); 
     } else {
       setLoiDangNhap(`❌ Tài khoản không có quyền truy cập vùng ${requiredRole} hoặc sai thông tin!`);
@@ -93,7 +93,7 @@ function TrangLogin({ requiredRole, onLoginSuccess }) {
             />
           </Form.Group>
 
-          <Form.Group className="mb-4">
+          <Form.Group className="mb-2"> {/* Giảm margin đáy một chút để cân đối với nút Quên mật khẩu */}
             <Form.Label className="text-secondary fw-semibold">Mật khẩu</Form.Label>
             <Form.Control 
               type="password" 
@@ -105,11 +105,41 @@ function TrangLogin({ requiredRole, onLoginSuccess }) {
             />
           </Form.Group>
 
+          {/* 🚀 ĐÃ THÊM: Nút Quên mật khẩu nằm gọn gàng ngay dưới ô nhập Mật khẩu */}
+          <div className="text-end mb-3">
+            <Button 
+              type="button"
+              variant="link" 
+              className="p-0 text-secondary small text-decoration-none fw-semibold"
+              style={{ fontSize: '0.85rem', transition: '0.2s' }}
+              onClick={() => navigate('/quen-mat-khau')}
+              onMouseEnter={(e) => e.target.style.color = '#38bdf8'}
+              onMouseLeave={(e) => e.target.style.color = '#64748b'}
+            >
+              Quên mật khẩu?
+            </Button>
+          </div>
+
           {loiDangNhap && <p className="text-danger small mb-3 fw-bold">{loiDangNhap}</p>}
 
           <Button type="submit" className="w-100 fw-bold border-0 py-2 text-dark" style={{ backgroundColor: getRoleBadgeColor(), borderRadius: '12px' }}>
              Đăng Nhập Vào Phân Hệ
           </Button>
+
+          {/* 🚀 ĐOẠN CHECK CHUẨN: Đứng độc lập dưới nút bấm login, không làm hỏng cấu trúc Form */}
+          {requiredRole === "USER" && (
+            <div className="text-center mt-3">
+              <span className="text-secondary small">Chưa có tài khoản? </span>
+              <Button 
+                type="button"
+                variant="link" 
+                className="p-0 text-info small fw-bold text-decoration-none ms-1"
+                onClick={() => navigate('/dang-ky-user')} // Bay thẳng sang trang cấu hình thông tin mới
+              >
+                Đăng ký tài khoản thành viên
+              </Button>
+            </div>
+          )}
         </Form>
       </Card>
     </Container>
