@@ -130,94 +130,100 @@ function FeedbackTab() {
         </Button>
       </div>
 
-      <div className="table-responsive rounded-3" style={{ background: 'rgba(15, 23, 42, 0.2)' }}>
-        <Table variant="dark" className="mb-0 bg-transparent" borderless>
-          <thead>
-            <tr>
-              <th style={{ ...styles.thStyle, width: '15%' }}>🕒 Thời gian</th>
-              <th style={{ ...styles.thStyle, width: '35%' }}>💬 Nội dung gửi</th>
-              <th style={{ ...styles.thStyle, width: '15%' }}>🏷️ Trạng thái</th>
-              <th style={{ ...styles.thStyle, width: '35%' }}>⚡ Phản hồi từ Hệ thống</th>
-            </tr>
-          </thead>
-          <tbody>
-            {danhSachGopY.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="text-center text-muted py-5">
-                  🍃 Hộp thư trống! Chưa có ý kiến phản ánh nào từ khách hàng.
-                </td>
-              </tr>
-            ) : (
-              danhSachGopY.map((item) => {
-                const thoiGianGui = item.ngayTao 
-                  ? new Date(item.ngayTao).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) 
-                  : 'Không rõ';
-                const thoiGianTraLoi = item.thoiGianPhanHoi 
-                  ? new Date(item.thoiGianPhanHoi).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit' }) 
-                  : '';
+     <div className="table-responsive rounded-3" style={{ background: 'rgba(15, 23, 42, 0.2)' }}>
+  <Table variant="dark" className="mb-0 bg-transparent" borderless>
+    <thead>
+      <tr>
+        <th style={{ ...styles.thStyle, width: '15%' }}>🕒 Thời gian</th>
+        <th style={{ ...styles.thStyle, width: '35%' }}>💬 Nội dung gửi</th>
+        <th style={{ ...styles.thStyle, width: '15%' }}>🏷️ Trạng thái</th>
+        <th style={{ ...styles.thStyle, width: '35%' }}>⚡ Phản hồi từ Hệ thống</th>
+      </tr>
+    </thead>
+    <tbody>
+      {danhSachGopY.length === 0 ? (
+        <tr>
+          <td colSpan="4" className="text-center text-muted py-5">
+            🍃 Hộp thư trống! Chưa có ý kiến phản ánh nào từ khách hàng.
+          </td>
+        </tr>
+      ) : (
+        danhSachGopY.map((item) => {
+          const thoiGianGui = item.ngayTao 
+            ? new Date(item.ngayTao).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) 
+            : 'Không rõ';
+          const thoiGianTraLoi = item.thoiGianPhanHoi 
+            ? new Date(item.thoiGianPhanHoi).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit' }) 
+            : '';
 
-                return (
-                  <tr key={item.id} className="align-top">
-                    {/* Cột 1: Thời gian */}
-                    <td style={styles.tdStyle}>
-                      <span className="text-muted small fw-semibold d-block mt-1">{thoiGianGui}</span>
-                    </td>
-                    
-                    {/* Cột 2: Nội dung Khách hàng */}
-                    <td style={styles.tdStyle}>
-                      <div className="p-3 rounded-4 text-white-50 position-relative" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.03)', whiteSpace: 'pre-line', fontSize: '0.95rem' }}>
-                        {item.noiDung || "Không có nội dung"}
-                      </div>
-                    </td>
-                    
-                    {/* Cột 3: Trạng thái Badge */}
-                    <td style={styles.tdStyle}>
-                      <Badge 
-                        style={item.trangThai === "Đã phản hồi" ? styles.badgeSuccess : styles.badgeDanger}
-                        className="px-2.5 py-1.5 fw-semibold mt-1"
-                      >
-                        {item.trangThai === "Đã phản hồi" ? "● Đã xử lý" : "◌ Chờ phản hồi"}
-                      </Badge>
-                    </td>
-                    
-                    {/* Cột 4: Form Phản hồi hoặc Nội dung đã rep */}
-                    <td style={styles.tdStyle}>
-                      {item.trangThai === "Đã phản hồi" ? (
-                        <div style={styles.adminReplyBox} className="shadow-sm">
-                          <small className="text-success d-block fw-bold text-uppercase mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>
-                            ✓ Đã duyệt phản hồi ({thoiGianTraLoi})
-                          </small>
-                          <p className="m-0 small text-white-50 lh-base" style={{ fontStyle: 'italic' }}>
-                            "{item.phanHoiAdmin}"
-                          </p>
-                        </div>
-                      ) : (
-                        <InputGroup className="shadow-sm mt-1">
-                          <Form.Control
-                            type="text"
-                            placeholder="Phản hồi nhanh tới User..."
-                            value={noiDungPhanHoi[item.id] || ""}
-                            onChange={(e) => handleTextChange(item.id, e.target.value)}
-                            style={styles.inputFeedback}
-                            className="form-control-custom"
-                          />
-                          <Button 
-                            style={styles.btnSubmit}
-                            disabled={!noiDungPhanHoi[item.id]?.trim()}
-                            onClick={() => handleGuiPhanHoi(item.id, item)}
-                          >
-                            Gửi
-                          </Button>
-                        </InputGroup>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </Table>
-      </div>
+          return (
+            <tr key={item.id} className="align-top">
+              {/* Cột 1: Thời gian - ĐÃ CHUYỂN SANG MÀU TRẮNG */}
+              <td style={styles.tdStyle}>
+                {/* Sếp chọn 1 trong 2 kiểu dưới đây nhé: */}
+                {/* Kiểu A: Trắng tinh hoàn toàn (text-white) */}
+                <span className="text-white small fw-semibold d-block mt-1">{thoiGianGui}</span>
+                
+                {/* Kiểu B: Trắng mờ nhẹ 50% cho sang (Sếp thích kiểu này thì bỏ comment nhé): 
+                <span className="text-white-50 small fw-semibold d-block mt-1">{thoiGianGui}</span> 
+                */}
+              </td>
+              
+              {/* Cột 2: Nội dung Khách hàng */}
+              <td style={styles.tdStyle}>
+                <div className="p-3 rounded-4 text-white-50 position-relative" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.03)', whiteSpace: 'pre-line', fontSize: '0.95rem' }}>
+                  {item.noiDung || "Không có nội dung"}
+                </div>
+              </td>
+              
+              {/* Cột 3: Trạng thái Badge */}
+              <td style={styles.tdStyle}>
+                <Badge 
+                  style={item.trangThai === "Đã phản hồi" ? styles.badgeSuccess : styles.badgeDanger}
+                  className="px-2.5 py-1.5 fw-semibold mt-1"
+                >
+                  {item.trangThai === "Đã phản hồi" ? "● Đã xử lý" : "◌ Chờ phản hồi"}
+                </Badge>
+              </td>
+              
+              {/* Cột 4: Form Phản hồi hoặc Nội dung đã rep */}
+              <td style={styles.tdStyle}>
+                {item.trangThai === "Đã phản hồi" ? (
+                  <div style={styles.adminReplyBox} className="shadow-sm">
+                    <small className="text-white d-block fw-bold text-uppercase mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>
+                      ✓ Đã duyệt phản hồi ({thoiGianTraLoi})
+                    </small>
+                    <p className="m-0 small text-white-50 lh-base" style={{ fontStyle: 'italic' }}>
+                      "{item.phanHoiAdmin}"
+                    </p>
+                  </div>
+                ) : (
+                  <InputGroup className="shadow-sm mt-1">
+                    <Form.Control
+                      type="text"
+                      placeholder="Phản hồi nhanh tới User..."
+                      value={noiDungPhanHoi[item.id] || ""}
+                      onChange={(e) => handleTextChange(item.id, e.target.value)}
+                      style={styles.inputFeedback}
+                      className="form-control-custom"
+                    />
+                    <Button 
+                      style={styles.btnSubmit}
+                      disabled={!noiDungPhanHoi[item.id]?.trim()}
+                      onClick={() => handleGuiPhanHoi(item.id, item)}
+                    >
+                      Gửi
+                    </Button>
+                  </InputGroup>
+                )}
+              </td>
+            </tr>
+          );
+        })
+      )}
+    </tbody>
+  </Table>
+</div>
     </Card>
   );
 }

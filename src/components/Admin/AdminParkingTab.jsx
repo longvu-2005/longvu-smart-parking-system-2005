@@ -30,7 +30,7 @@ function AdminParkingTab() {
       });
       fetchData();
     } catch (err) {
-      alert("⚠️ Lỗi cập nhật trạng thái!");
+      alert(" Lỗi cập nhật trạng thái!");
     }
   };
 

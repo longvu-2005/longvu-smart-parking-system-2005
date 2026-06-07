@@ -81,10 +81,10 @@ function SummaryCards({ soLuongBai, soXeTrongBai, tongTien }) {
             <div className="d-flex flex-column gap-1">
               <span style={styles.titleText}>Doanh Thu Theo Bộ Lọc</span>
               <h2 className="m-0 mt-1" style={styles.valueText('#fbbf24')}>
-                {tongTien.toLocaleString('vi-VN')} <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>đ</span>
+                {(tongTien || 0).toLocaleString('vi-VN')} <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>đ</span>
               </h2>
             </div>
-           
+            
           </div>
         </Card>
       </Col>

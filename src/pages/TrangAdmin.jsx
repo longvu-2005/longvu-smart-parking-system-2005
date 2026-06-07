@@ -27,7 +27,7 @@ function TrangAdmin() {
   const [boLocThoiGian, setBoLocThoiGian] = useState('7ngay');
 
   const [showModalBai, setShowModalBai] = useState(false);
-  const [coSo, setCoSo] = useState('Cơ sở 1 (Hòa Lạc)');
+  const [coSo, setCoSo] = useState('Cơ sở 1 (HOLA)'); // 💡 Giữ chuẩn định dạng khởi tạo ban đầu
   const [tenKhu, setTenKhu] = useState('');
   const [soLuongCho, setSoLuongCho] = useState(10);
 
@@ -35,8 +35,8 @@ function TrangAdmin() {
     setLoading(true);
     try {
       const [resXe, resBai] = await Promise.all([axios.get(API_VEHICLES), axios.get(API_LOTS)]);
-      setDanhSachXe(resXe.data);
-      setDanhSachBai(resBai.data);
+      setDanhSachXe(resXe.data || []);
+      setDanhSachBai(resBai.data || []);
     } catch (error) { console.error("Lỗi đồng bộ:", error); } 
     finally { setLoading(false); }
   };
@@ -53,13 +53,25 @@ function TrangAdmin() {
 
   const handleSinhTuDongBaiDo = async (e) => {
     e.preventDefault();
+    if (!tenKhu.trim()) {
+      alert("Vui lòng nhập tên khu trước khi xây dựng chỗ sếp ơi!");
+      return;
+    }
     setSinhLoading(true);
     try {
+      const tenKhuChuan = tenKhu.trim().toUpperCase();
       for (let i = 1; i <= soLuongCho; i++) {
-        await axios.post(API_LOTS, { coSo, tenBai: `${tenKhu.toUpperCase()} - Ô ${i < 10 ? '0'+i : i}`, trangThai: "Trống", choPhepDatChoTruoc: "false" });
+        await axios.post(API_LOTS, { 
+          coSo, 
+          phanKhu: tenKhuChuan, 
+          tenBai: `${tenKhuChuan} - Ô ${i < 10 ? '0'+i : i}`, 
+          trangThai: "Trống", 
+          choPhepDatChoTruoc: "false" 
+        });
       }
+      setTenKhu('');
       setShowModalBai(false);
-      fetchData();
+      await fetchData();
     } catch (error) { alert("Lỗi sinh ô!"); } 
     finally { setSinhLoading(false); }
   };
@@ -72,10 +84,48 @@ function TrangAdmin() {
     }
   };
 
-  const { tongTien, dataChart } = locDanhSachXeTheoThoiGian(danhSachXe, boLocThoiGian);
-  const cauTrucHaTang = layCauTrucHaTang(danhSachBai);
+  // --- LOGIC CHUẨN HÓA KHÔNG LÀM MẤT DỮ LIỆU ---
+  const danhSachXeDaChuanHoa = danhSachXe.map(xe => {
+    let ngayRaChuan = null;
+    if (xe.thoiGianRa && typeof xe.thoiGianRa === 'string') {
+      const parts = xe.thoiGianRa.split(', ');
+      if (parts.length === 2) {
+        const dateParts = parts[0].split('/');
+        const timeParts = parts[1].split(':');
+        if (dateParts.length === 3 && timeParts.length === 3) {
+          ngayRaChuan = new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0], timeParts[1], timeParts[2]);
+        }
+      }
+    }
+    const soTienNuột = Number(xe.tongTien) || Number(xe.soTien) || Number(xe.tien) || 0;
+    return {
+      ...xe,
+      thoiGianRa: ngayRaChuan || xe.thoiGianRa,
+      tongTien: soTienNuột,
+      soTien: soTienNuột,
+      tien: soTienNuột
+    };
+  });
 
-  // Định nghĩa style inline cho các hiệu ứng hiện đại (Glassmorphism & Gradient)
+  const { tongTien, dataChart } = locDanhSachXeTheoThoiGian(danhSachXeDaChuanHoa, boLocThoiGian);
+
+  const danhSachBaiDaChuanHoa = danhSachBai.map(bai => {
+    if (bai.phanKhu) return bai;
+    let phanKhuTuDong = "KHU VỰC CHUNG";
+    if (bai.tenBai && bai.tenBai.includes(' - ')) {
+      phanKhuTuDong = bai.tenBai.split(' - ')[0].toUpperCase();
+    } else if (bai.tenBai) {
+      const match = bai.tenBai.match(/^([a-zA-Z\sĂăÂâĐđÊêÔôƠơƯưỨứỨứẤấẦầẨẩẬậỚớỜờỞởỢợỆệỀềỂểỄễ]+)/);
+      if (match) phanKhuTuDong = match[1].trim().toUpperCase();
+    }
+    return {
+      ...bai,
+      phanKhu: phanKhuTuDong
+    };
+  });
+
+  const cauTrucHaTang = layCauTrucHaTang(danhSachBaiDaChuanHoa);
+
   const styles = {
     pageContainer: {
       background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
@@ -112,7 +162,6 @@ function TrangAdmin() {
             <h1 className="fw-black mb-1 tracking-tight" style={styles.headerGradient}>
                HỆ THỐNG QUẢN TRỊ ADMIN
             </h1>
-            {/* 🔑 ĐÃ ĐỔI ĐƯỜNG DẪN KHỚP VỚI APP.JSX CỦA SẾP */}
             <Button 
               variant="warning" 
               className="fw-bold mt-2"
@@ -122,7 +171,7 @@ function TrangAdmin() {
             </Button>
           </div>
           
-          {/* Navigation Tabs cải tiến cực mượt */}
+          {/* Navigation Tabs */}
           <Nav 
             variant="pills" 
             activeKey={currentTab} 
@@ -162,7 +211,7 @@ function TrangAdmin() {
           />
         </div>
 
-        {/* Nội dung các Tab được bọc trong các container mịn màng */}
+        {/* Nội dung các Tab */}
         <div className="tab-content-wrapper transition-all">
           {currentTab === 'xe' && (
             <VehicleTab 

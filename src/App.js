@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Giữ nguyên việc xóa useEffect thừa để sạch WARNING
+import React, { useState } from 'react'; 
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { Container, Navbar, Nav, Button } from 'react-bootstrap';
 import TrangKhachHang from './pages/TrangKhachHang';
@@ -15,12 +15,12 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 
 function App() {
-  // 🔑 Khởi tạo State từ localStorage để khi F5 trình duyệt KHÔNG BỊ mất trạng thái đăng nhập
+  // 🔑 Khởi tạo State từ localStorage để khi F5 trình duyệt KHWOWNG BỊ mất trạng thái đăng nhập
   const [userRole, setUserRole] = useState(() => {
     const savedUser = localStorage.getItem("userHienTai");
     if (savedUser) {
       const userObj = JSON.parse(savedUser);
-      return userObj.role ? userObj.role.toUpperCase() : null; // Chuyển 'Admin' -> 'ADMIN' cho khớp logic bên dưới
+      return userObj.role ? userObj.role.toUpperCase() : null; 
     }
     return null;
   });
@@ -56,20 +56,44 @@ function App() {
             <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 bg-secondary" />
             <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="ms-auto gap-2 align-items-center">
-                <NavLink to="/" className={({ isActive }) => isActive ? "nav-link px-4 py-2 rounded-pill fw-bold text-dark bg-info" : "nav-link px-4 py-2 text-secondary fw-semibold"} end>
-                  🙋‍♂️ Cho Bạn
-                </NavLink>
-                <NavLink to="/admin" className={({ isActive }) => isActive ? "nav-link px-4 py-2 rounded-pill fw-bold text-dark bg-warning" : "nav-link px-4 py-2 text-secondary fw-semibold"}>
-                  🛠️ Quản Lý
-                </NavLink>
-                <NavLink to="/security" className={({ isActive }) => isActive ? "nav-link px-4 py-2 rounded-pill fw-bold text-white bg-danger" : "nav-link px-4 py-2 text-secondary fw-semibold"}>
-                  🛡️ An Ninh
-                </NavLink>
+                
+                {/* 🚀 ĐÃ CẬP NHẬT: Ẩn/Hiện Menu thông minh dựa vào trạng thái và Vai trò (userRole) */}
+                
+                {/* 1. Nút "Cho Bạn" - Chỉ hiện khi chưa đăng nhập HOẶC đã đăng nhập đúng quyền USER */}
+                {(!userRole || userRole === 'USER') && (
+                  <NavLink 
+                    to="/" 
+                    className={({ isActive }) => isActive ? "nav-link px-4 py-2 rounded-pill fw-bold text-dark bg-info" : "nav-link px-4 py-2 text-secondary fw-semibold"} 
+                    end
+                  >
+                    🙋‍♂️ Cho Bạn
+                  </NavLink>
+                )}
+
+                {/* 2. Nút "Quản Lý" - Chỉ hiện khi chưa đăng nhập HOẶC đã đăng nhập đúng quyền ADMIN */}
+                {(!userRole || userRole === 'ADMIN') && (
+                  <NavLink 
+                    to="/admin" 
+                    className={({ isActive }) => isActive ? "nav-link px-4 py-2 rounded-pill fw-bold text-dark bg-warning" : "nav-link px-4 py-2 text-secondary fw-semibold"}
+                  >
+                    🛠️ Quản Lý
+                  </NavLink>
+                )}
+
+                {/* 3. Nút "An Ninh" - Chỉ hiện khi chưa đăng nhập HOẶC đã đăng nhập đúng quyền SECURITY */}
+                {(!userRole || userRole === 'SECURITY') && (
+                  <NavLink 
+                    to="/security" 
+                    className={({ isActive }) => isActive ? "nav-link px-4 py-2 rounded-pill fw-bold text-white bg-danger" : "nav-link px-4 py-2 text-secondary fw-semibold"}
+                  >
+                    🛡️ An Ninh
+                  </NavLink>
+                )}
                 
                 {/* Hiển thị Badge vai trò hiện tại và nút Thoát nếu đã login */}
                 {userRole && (
                   <>
-                    <span className="badge bg-light text-dark px-3 py-2 fw-bold me-2">
+                    <span className="badge bg-light text-dark px-3 py-2 fw-bold ms-2 me-2">
                       Vai trò: {userRole}
                     </span>
                     <Button variant="outline-danger" size="sm" className="rounded-pill px-3 fw-bold" onClick={handleLogout}>
@@ -86,10 +110,8 @@ function App() {
         <div style={{ flexGrow: 1, width: '100%' }}>
           <Routes>
             
-            {/* 🚀 Các route công khai (Ai cũng vào được) */}
+            {/* Các route công khai */}
             <Route path="/dang-ky-user" element={<TrangDangKyUser />} />
-            
-            {/* 🟢 ĐÃ SỬA: Bốc thẻ này từ dòng 39 quăng vào đây nằm gọn gàng trong <Routes> */}
             <Route path="/quen-mat-khau" element={<TrangQuenMatKhau />} />
 
             {/* 1. TRANG KHÁCH HÀNG: Phải có quyền USER */}
@@ -116,7 +138,7 @@ function App() {
               element={userRole === 'SECURITY' ? <TrangSecurity /> : <TrangLogin requiredRole="SECURITY" onLoginSuccess={handleLoginSuccess} />} 
             /> 
 
-            {/* Tự động chuyển hướng nếu gõ sai URL - Phải luôn ở đáy cùng */}
+            {/* Tự động chuyển hướng nếu gõ sai URL */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>

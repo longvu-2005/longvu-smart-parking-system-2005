@@ -35,19 +35,16 @@ function VehicleTab({ xeTrongBai, lichSuXeRa }) {
       fontWeight: '600',
       display: 'inline-block'
     }),
-    // 🟢 SỬA MÀU THỜI GIAN VÀO (BẢNG 1): Dùng màu xám bạc sáng
     timeInActive: {
       color: '#cbd5e1', 
       fontFamily: 'monospace',
       fontSize: '0.85rem'
     },
-    // 🟢 SỬA MÀU THỜI GIAN VÀO (BẢNG 2): Dùng màu xanh Amber nhẹ để dễ nhìn
     timeInHistory: {
       color: '#f1f5f9', 
       fontFamily: 'monospace',
       fontSize: '0.85rem'
     },
-    // 🟢 SỬA MÀU THỜI GIAN RA (BẢNG 2): Xanh Cyan cực rõ
     timeOutHistory: {
       color: '#38bdf8', 
       fontFamily: 'monospace',
@@ -139,29 +136,35 @@ function VehicleTab({ xeTrongBai, lichSuXeRa }) {
                   <td colSpan="5" className="text-center py-4 text-muted small">Chưa có dữ liệu lịch sử ra vào.</td>
                 </tr>
               ) : (
-                lichSuXeRa.map(xe => (
-                  <tr key={xe.id}>
-                    <td style={styles.tdStyle} className="fw-semibold text-white-50 fs-5 font-monospace">
-                      {xe.bienSo}
-                    </td>
-                    <td style={styles.tdStyle}>
-                      <span style={styles.customTag('#64748b')}>{xe.loaiXe}</span>
-                    </td>
-                    {/* 🟢 ĐÃ FIX MÀU: Thời gian vào giờ hiển thị màu sáng rõ ràng */}
-                    <td style={styles.tdStyle}>
-                      <span style={styles.timeInHistory}>{xe.thoiGianVao}</span>
-                    </td>
-                    {/* 🟢 ĐÃ FIX MÀU: Thời gian ra xanh Cyan cực nét */}
-                    <td style={styles.tdStyle}>
-                      <span style={styles.timeOutHistory}>{xe.thoiGianRa}</span>
-                    </td>
-                    <td style={styles.tdStyle}>
-                      <span style={styles.moneyText}>
-                        +{Number(xe.soTien).toLocaleString('vi-VN')} đ
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                lichSuXeRa.map(xe => {
+                  // 🟢 SỬA LỖI DIỆT TẬN GỐC NaN TẠI ĐÂY:
+                  // Quét qua tất cả các trường có thể lưu số tiền, nếu lỗi hoặc trống thì gán = 0
+                  const layTienHople = Number(xe.soTien) || Number(xe.tongTien) || Number(xe.tien) || 0;
+                  const hienThiTien = isNaN(layTienHople) ? 0 : layTienHople;
+
+                  return (
+                    <tr key={xe.id}>
+                      <td style={styles.tdStyle} className="fw-semibold text-white-50 fs-5 font-monospace">
+                        {xe.bienSo}
+                      </td>
+                      <td style={styles.tdStyle}>
+                        <span style={styles.customTag('#64748b')}>{xe.loaiXe}</span>
+                      </td>
+                      <td style={styles.tdStyle}>
+                        <span style={styles.timeInHistory}>{xe.thoiGianVao}</span>
+                      </td>
+                      <td style={styles.tdStyle}>
+                        <span style={styles.timeOutHistory}>{xe.thoiGianRa}</span>
+                      </td>
+                      {/* Hiển thị số tiền an toàn không lo lỗi */}
+                      <td style={styles.tdStyle}>
+                        <span style={styles.moneyText}>
+                          +{hienThiTien.toLocaleString('vi-VN')} đ
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </Table>
