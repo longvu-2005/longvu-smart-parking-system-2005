@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Nav, Button } from 'react-bootstrap'; 
+import { Container, Button, Nav, Row, Col } from 'react-bootstrap'; // 👈 Thêm Row, Col vào đây 
 import { useNavigate } from 'react-router-dom'; 
 import axios from 'axios';
 import { API_VEHICLES, API_LOTS } from '../constants/api';
@@ -154,62 +154,79 @@ function TrangAdmin() {
   };
 
   return (
-    <div style={styles.pageContainer} className="text-white w-100 position-relative m-0">
-      <Container className="pb-5 pt-3">
-        {/* Header Section */}
-        <div className="my-5 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
-          <div>
-            <h1 className="fw-black mb-1 tracking-tight" style={styles.headerGradient}>
-               HỆ THỐNG QUẢN TRỊ ADMIN
-            </h1>
+  <div style={styles.pageContainer} className="text-white w-100 position-relative m-0">
+    <Container className="pb-5 pt-3">
+      
+      {/* Header Section */}
+      <div className="my-5">
+        
+        {/* 1. Tiêu đề luôn lên ĐẦU và CĂN GIỮA */}
+        <div className="text-center mb-4">
+          <h1 className="fw-black mb-1 tracking-tight" style={styles.headerGradient}>
+            ADMINISTRATIVE MANAGEMENT SYSTEM
+          </h1>
+           <p className="text-white-50 small m-0 mt-1 font-monospace text-uppercase" style={{ letterSpacing: '0.1em', fontSize: '1rem' }}>
+          Hệ thống quản lý quản trị
+        </p>
+        </div>
+        
+        {/* 2. Chia hàng: Bên TRÁI là nút chọn, bên PHẢI là menu tab đăng ký tổng */}
+        <Row className="align-items-center gap-3 gap-md-0">
+          
+          {/* Cột Bên Trái: Chứa nút chọn */}
+          <Col md={6} className="text-center text-md-start">
             <Button 
               variant="warning" 
-              className="fw-bold mt-2"
+              className="fw-bold"
               onClick={() => navigate('/admin/dang-ky-tong')}
             >
               🔑 Vào Trang Đăng Ký Tổng
             </Button>
-          </div>
+          </Col>
           
-          {/* Navigation Tabs */}
-          <Nav 
-            variant="pills" 
-            activeKey={currentTab} 
-            onSelect={setCurrentTab} 
-            className="p-15 rounded-3 d-flex align-items-center"
-            style={styles.navWrapper}
-          >
-            <Nav.Item className="m-1">
-              <Nav.Link eventKey="xe" style={styles.tabLink(currentTab === 'xe')}>
-                🚗 Xe Ra Vào
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item className="m-1">
-              <Nav.Link eventKey="bai" style={styles.tabLink(currentTab === 'bai')}>
-                🏢 Hạ Tầng
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item className="m-1">
-              <Nav.Link eventKey="bieudo" style={styles.tabLink(currentTab === 'bieudo')}>
-                📈 Doanh Thu
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item className="m-1">
-              <Nav.Link eventKey="gopy" style={styles.tabLink(currentTab === 'gopy')}>
-                📩 Góp Ý
-              </Nav.Link>
-            </Nav.Item>
-          </Nav>
-        </div>
+          {/* Cột Bên Phải: Chứa các khung điều hướng tab */}
+          <Col md={6} className="d-flex justify-content-center justify-content-md-end">
+            <Nav 
+              variant="pills" 
+              activeKey={currentTab} 
+              onSelect={setCurrentTab} 
+              className="p-15 rounded-3 d-flex align-items-center flex-wrap"
+              style={styles.navWrapper}
+            >
+              <Nav.Item className="m-1">
+                <Nav.Link eventKey="xe" style={styles.tabLink(currentTab === 'xe')}>
+                  🚗 Xe Ra Vào
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item className="m-1">
+                <Nav.Link eventKey="bai" style={styles.tabLink(currentTab === 'bai')}>
+                  🏢 Hạ Tầng
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item className="m-1">
+                <Nav.Link eventKey="bieudo" style={styles.tabLink(currentTab === 'bieudo')}>
+                  📈 Doanh Thu
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item className="m-1">
+                <Nav.Link eventKey="gopy" style={styles.tabLink(currentTab === 'gopy')}>
+                  📩 Góp Ý
+                </Nav.Link>
+              </Nav.Item>
+            </Nav>
+          </Col>
 
-        {/* Khối thống kê tổng quan */}
-        <div className="mb-5 animated fadeIn">
-          <SummaryCards 
-            soLuongBai={danhSachBai.length} 
-            soXeTrongBai={danhSachXe.filter(x => x.trangThai !== "Đã xuất bãi").length} 
-            tongTien={tongTien} 
-          />
-        </div>
+        </Row>
+      </div>
+
+      {/* Khối thống kê tổng quan (Giữ nguyên bên dưới) */}
+      <div className="mb-5 animated fadeIn">
+        <SummaryCards 
+          soLuongBai={danhSachBai.length} 
+          soXeTrongBai={danhSachXe.filter(x => x.trangThai !== "Đã xuất bãi").length} 
+          tongTien={tongTien} 
+        />
+      </div>
 
         {/* Nội dung các Tab */}
         <div className="tab-content-wrapper transition-all">

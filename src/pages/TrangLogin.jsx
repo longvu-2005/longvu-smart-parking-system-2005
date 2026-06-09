@@ -26,13 +26,12 @@ function TrangLogin({ requiredRole, onLoginSuccess }) {
     fetchUsers();
   }, []);
 
-  const handleLogin = (e) => {
+ const handleLogin = (e) => {
     e.preventDefault();
 
     const usernameNhap = taiKhoan.trim();
     const passwordNhap = matKhau.trim();
 
-    // 1. TÀI KHOẢN ADMIN CHÍNH (Cứu cảnh khi mất dữ liệu hệ thống)
     const SUPER_ADMIN_USER = "Longmaichat";
     const SUPER_ADMIN_PASS = "ongvuac1"; 
 
@@ -41,15 +40,20 @@ function TrangLogin({ requiredRole, onLoginSuccess }) {
       usernameNhap === SUPER_ADMIN_USER && 
       passwordNhap === SUPER_ADMIN_PASS
     ) {
-      onLoginSuccess("ADMIN");
+      const superAdminData = {
+        id: "super-admin",
+        taiKhoan: SUPER_ADMIN_USER,
+        hoTen: "Super Admin Hệ Thống",
+        role: "ADMIN"
+      };
+      localStorage.setItem("userHienTai", JSON.stringify(superAdminData));
+      onLoginSuccess("ADMIN"); // 🚀 Chỉ cần gọi hàm này, App.jsx sẽ tự lo phần còn lại
       return; 
     }
 
-    // 2. Nếu không phải Super Admin -> Tiến hành so khớp với dữ liệu từ API
     const taiKhoanHopLe = danhSachTaiKhoan.find(user => {
       const roleAPI = user.role ? user.role.toUpperCase() : "";
       const roleYeuCau = requiredRole.toUpperCase();
-
       return (
         user.taiKhoan === usernameNhap && 
         user.matKhau === passwordNhap && 
@@ -58,12 +62,13 @@ function TrangLogin({ requiredRole, onLoginSuccess }) {
     });
 
     if (taiKhoanHopLe) {
-      onLoginSuccess(requiredRole.toUpperCase()); 
+      localStorage.setItem("userHienTai", JSON.stringify(taiKhoanHopLe));
+      onLoginSuccess(requiredRole.toUpperCase()); // 🚀 Chỉ cần kích hoạt đồng bộ vai trò lên App.jsx
     } else {
       setLoiDangNhap(`❌ Tài khoản không có quyền truy cập vùng ${requiredRole} hoặc sai thông tin!`);
     }
   };
-
+  
   const getRoleBadgeColor = () => {
     if (requiredRole === 'ADMIN') return '#fbbf24'; 
     if (requiredRole === 'SECURITY') return '#f87171'; 

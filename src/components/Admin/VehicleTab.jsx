@@ -1,7 +1,20 @@
-import React from 'react';
-import { Card, Table } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Card, Table, Button } from 'react-bootstrap';
 
 function VehicleTab({ xeTrongBai, lichSuXeRa }) {
+  // --- STATE PHÂN TRANG CHO BẢNG LỊCH SỬ ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6; // Số dòng trên 1 trang
+
+  // --- LOGIC TÍNH TOÁN PHÂN TRANG ---
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentLichSu = lichSuXeRa.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(lichSuXeRa.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
   
   const styles = {
     glassCard: {
@@ -59,13 +72,13 @@ function VehicleTab({ xeTrongBai, lichSuXeRa }) {
 
   return (
     <>
-      {/* KHỐI 1: XE ĐANG ĐỖ THỰC TẾ */}
+      {/* KHỐI 1: XE ĐANG ĐỖ THỰC TẾ (Không phân trang) */}
       <Card style={styles.glassCard} className="border-0 p-4 mb-4 text-white shadow">
         <div className="mb-3">
           <h5 className="text-info fw-bold m-0" style={{ letterSpacing: '-0.02em' }}>
             🚗 Xe Đang Đỗ Thực Tế
           </h5>
-          <p className="text-muted small m-0">Danh sách phương tiện hiện diện trong các ô đỗ của toàn hệ thống</p>
+          
         </div>
 
         <div className="table-responsive rounded-3" style={{ background: 'rgba(15, 23, 42, 0.2)' }}>
@@ -110,7 +123,7 @@ function VehicleTab({ xeTrongBai, lichSuXeRa }) {
         </div>
       </Card>
 
-      {/* KHỐI 2: NHẬT KÝ LỊCH SỬ RA VÀO */}
+      {/* KHỐI 2: NHẬT KÝ LỊCH SỬ RA VÀO (Đã thêm Phân trang) */}
       <Card style={styles.glassCard} className="border-0 p-4 text-white shadow">
         <div className="mb-3">
           <h5 className="text-success fw-bold m-0" style={{ letterSpacing: '-0.02em' }}>
@@ -131,14 +144,13 @@ function VehicleTab({ xeTrongBai, lichSuXeRa }) {
               </tr>
             </thead>
             <tbody>
-              {lichSuXeRa.length === 0 ? (
+              {currentLichSu.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="text-center py-4 text-muted small">Chưa có dữ liệu lịch sử ra vào.</td>
                 </tr>
               ) : (
-                lichSuXeRa.map(xe => {
-                  // 🟢 SỬA LỖI DIỆT TẬN GỐC NaN TẠI ĐÂY:
-                  // Quét qua tất cả các trường có thể lưu số tiền, nếu lỗi hoặc trống thì gán = 0
+                // Lặp qua mảng currentLichSu (đã bị cắt bởi phân trang)
+                currentLichSu.map(xe => {
                   const layTienHople = Number(xe.soTien) || Number(xe.tongTien) || Number(xe.tien) || 0;
                   const hienThiTien = isNaN(layTienHople) ? 0 : layTienHople;
 
@@ -156,7 +168,6 @@ function VehicleTab({ xeTrongBai, lichSuXeRa }) {
                       <td style={styles.tdStyle}>
                         <span style={styles.timeOutHistory}>{xe.thoiGianRa}</span>
                       </td>
-                      {/* Hiển thị số tiền an toàn không lo lỗi */}
                       <td style={styles.tdStyle}>
                         <span style={styles.moneyText}>
                           +{hienThiTien.toLocaleString('vi-VN')} đ
@@ -169,6 +180,48 @@ function VehicleTab({ xeTrongBai, lichSuXeRa }) {
             </tbody>
           </Table>
         </div>
+
+        {/* --- THANH ĐIỀU HƯỚNG PHÂN TRANG (Tông màu tối / xanh emerald) --- */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-center align-items-center mt-4 gap-2">
+            <Button 
+              variant="outline-secondary" 
+              size="sm" 
+              disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+              style={{ borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              &laquo; Trước
+            </Button>
+
+            {[...Array(totalPages)].map((_, index) => (
+              <Button
+                key={index + 1}
+                variant={currentPage === index + 1 ? "success" : "outline-secondary"}
+                size="sm"
+                onClick={() => handlePageChange(index + 1)}
+                style={{ 
+                  borderRadius: '8px', 
+                  fontWeight: currentPage === index + 1 ? 'bold' : 'normal',
+                  color: currentPage === index + 1 ? '#fff' : '',
+                  border: currentPage === index + 1 ? 'none' : '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                {index + 1}
+              </Button>
+            ))}
+
+            <Button 
+              variant="outline-secondary" 
+              size="sm" 
+              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+              style={{ borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              Sau &raquo;
+            </Button>
+          </div>
+        )}
       </Card>
     </>
   );

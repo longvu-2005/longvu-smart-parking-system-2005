@@ -6,3 +6,11 @@ export const API_RESERVATIONS = "https://6a1e60feb79eec0d6cef1b49.mockapi.io/res
 export const API_LOTSS = "https://6a1cebffbcc4f20d5ca3ae4f.mockapi.io/slots";
 export const API_MESSAGES = "https://6a1e60feb79eec0d6cef1b49.mockapi.io/messages";
 export const API_PRICES = "https://6a198baf489e4715751a15d3.mockapi.io/vehicles";
+
+
+
+
+
+
+
+export const API_RESERVATIONS_USER = "https://6a2521dc5447714a6f8331ad.mockapi.io/reservations";

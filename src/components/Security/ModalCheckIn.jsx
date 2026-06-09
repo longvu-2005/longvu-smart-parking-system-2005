@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, Form, Button, Row, Col, Badge } from 'react-bootstrap';
+
+// Tách inline style ra ngoài để tránh tạo mới object mỗi lần render
+const MODAL_STYLE = { color: '#0f172a' };
+const BODY_STYLE = { backgroundColor: '#f8fafc' };
+const RIGHT_COL_STYLE = { borderLeft: '1px solid #dee2e6' };
+const LIST_CONTAINER_STYLE = { maxHeight: '250px', overflowY: 'auto' };
 
 function ModalCheckIn({
   show,
@@ -15,7 +21,7 @@ function ModalCheckIn({
   setViTri,
   oTrongTheoCoSo = [],
   errors = {},
-  danhSachSlotsOnline = [] // Giá trị mặc định là mảng rỗng để tránh undefined
+  danhSachSlotsOnline = []
 }) {
   
   // Hàm xử lý chọn nhanh xe từ list đặt chỗ
@@ -24,17 +30,22 @@ function ModalCheckIn({
     setBienSo(slot.bienSo || "");
     setLoaiXe(slot.loaiXe || "Ô tô");
     setCoSoChon(slot.coSo || "Cơ sở 1 (HOLA)");
-    setViTri(slot.tenBai || "");
+    
+    // Lưu ý: Đảm bảo component cha xử lý kịp việc cập nhật danh sách ô trống 
+    // theo cơ sở mới trước khi set vị trí này.
+    setTimeout(() => {
+      setViTri(slot.tenBai || "");
+    }, 50); 
   };
 
   return (
-    <Modal show={show} onHide={onHide} centered size="lg" style={{ color: '#0f172a' }}>
+    <Modal show={show} onHide={onHide} centered size="lg" style={MODAL_STYLE}>
       <Modal.Header closeButton className="fw-bold">
         Tiếp Nhận Xe Mới
       </Modal.Header>
       
       <Form onSubmit={handleSubmit}>
-        <Modal.Body style={{ backgroundColor: '#f8fafc' }}>
+        <Modal.Body style={BODY_STYLE}>
           <Row>
             {/* Cột trái: Form nhập liệu chính */}
             <Col md={7}>
@@ -70,42 +81,57 @@ function ModalCheckIn({
 
               <Form.Group className="mb-3">
                 <Form.Label className="fw-bold text-secondary">Chọn Ô Đỗ</Form.Label>
-                <Form.Select value={viTri} onChange={(e) => setViTri(e.target.value)} isInvalid={!!errors.viTri}>
+                <Form.Select 
+                  value={viTri} 
+                  onChange={(e) => setViTri(e.target.value)} 
+                  isInvalid={!!errors.viTri}
+                >
                   <option value="">-- Chọn ô đỗ trống --</option>
-                  {oTrongTheoCoSo && oTrongTheoCoSo.map(o => (
+                  {oTrongTheoCoSo.map(o => (
                     <option key={o.id} value={o.tenBai}>{o.tenBai}</option>
                   ))}
                 </Form.Select>
+                {/* FIX: Thêm hiển thị báo lỗi cho vị trí đỗ xe */}
+                <Form.Control.Feedback type="invalid">{errors.viTri}</Form.Control.Feedback> 
               </Form.Group>
             </Col>
 
-            {/* Cột phải: Danh sách hàng đợi Online (ĐÃ FIX LỖI CRASH) */}
-            <Col md={5} style={{ borderLeft: '1px solid #dee2e6' }}>
-              <h6 className="fw-bold text-warning mb-3"> Xe đang đợi Online</h6>
-              <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+            {/* Cột phải: Danh sách hàng đợi Online */}
+            <Col md={5} style={RIGHT_COL_STYLE}>
+              <h6 className="fw-bold text-warning mb-3">Xe đang đợi Online</h6>
+              <div style={LIST_CONTAINER_STYLE}>
                 {Array.isArray(danhSachSlotsOnline) && danhSachSlotsOnline.length > 0 ? (
                   danhSachSlotsOnline.map((slot, index) => {
-                    // Kiểm tra an toàn: nếu slot bị null/undefined thì bỏ qua
                     if (!slot) return null;
+                    
+                    const isSelected = bienSo === slot.bienSo;
                     
                     return (
                       <div 
                         key={slot.id || index} 
-                        className="p-2 mb-2 border rounded shadow-sm" 
+                        className="p-2 mb-2 border rounded shadow-sm transition-all" 
                         onClick={() => handleChonNhanh(slot)}
                         style={{ 
                           cursor: 'pointer', 
-                          backgroundColor: bienSo === slot.bienSo ? '#e8f5e9' : '#ffffff',
-                          borderLeft: bienSo === slot.bienSo ? '4px solid #198754' : '1px solid #dee2e6'
+                          backgroundColor: isSelected ? '#e8f5e9' : '#ffffff',
+                          borderLeft: isSelected ? '4px solid #198754' : '1px solid #dee2e6',
+                          transition: 'all 0.2s ease' // Thêm hiệu ứng mượt khi click chọn
                         }}
                       >
-                        <Badge bg="secondary">{slot.bienSo || "Không BS"}</Badge>
-                        <div className="small text-muted mt-1">Vị trí: {slot.tenBai || "N/A"}</div>
+                        <Badge bg={isSelected ? "success" : "secondary"}>
+                          {slot.bienSo || "Không BS"}
+                        </Badge>
+                        <div className="small text-muted mt-1">
+                          Cơ sở: {slot.coSo ? slot.coSo.replace("Cơ sở ", "") : "N/A"}
+                        </div>
+                        <div className="small text-dark fw-medium">Vị trí đặt: {slot.tenBai || "N/A"}</div>
                       </div>
                     );
                   })
                 ) : (
-                  <small className="text-muted fst-italic">Không có dữ liệu xe đợi ở cổng.</small>
+                  <div className="text-center py-4 text-muted fst-italic">
+                    <small>Không có dữ liệu xe đợi ở cổng.</small>
+                  </div>
                 )}
               </div>
             </Col>

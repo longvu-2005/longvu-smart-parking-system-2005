@@ -129,19 +129,24 @@ function TrangSecurity() {
       fetchData(); 
     } catch (error) { alert("Lỗi khi gửi tin nhắn phản hồi!"); }
   };
-
+// 🛡️ SMARTPARK SECURITY GATE
   return (
     <Container className="pb-5 mt-3">
       {/* 🛡️ BANNER TIÊU ĐỀ KHÔNG GIAN ĐIỀU KHIỂN */}
-      <div className="text-center mb-4 position-relative py-3 rounded-4" style={{ background: 'linear-gradient(180deg, rgba(6, 182, 212, 0.1) 0%, rgba(6, 182, 212, 0) 100%)' }}>
-        <h2 className="text-center m-0 text-info fw-extrabold tracking-wider fs-3" style={{ textShadow: '0 0 15px rgba(6, 182, 212, 0.4)' }}>
-          🛡️ SMARTPARK SECURITY GATE
-        </h2>
+       <div className="my-4 text-center">
+            <h1 className="fw-black tracking-tight mb-0" style={{ 
+              fontSize: '2.5rem', fontWeight: '900',
+              background: 'linear-gradient(135deg, #38bdf8, #6366f1, #ec4899)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase' 
+            }}>
+             🛡️ SMARTPARK SECURITY GATE
+            </h1>
+        
         <p className="text-white-50 small m-0 mt-1 font-monospace text-uppercase" style={{ letterSpacing: '0.1em', fontSize: '0.75rem' }}>
           Hệ thống điều phối an ninh & kiểm soát ra vào bãi
         </p>
       </div>
-      
+        
       {/* 🟩 BẢNG ĐIỀU KHIỂN TRUNG TÂM (GLASS CARD FULL TÍNH NĂNG) */}
       <Card 
         className="p-4 border-0 shadow-lg text-white" 

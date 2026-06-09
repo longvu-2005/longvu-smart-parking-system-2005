@@ -1,13 +1,13 @@
-// Trang Đăng Ký Tổng - Giao Diện Cấp Quyền Toàn Bộ Tài Khoản Nội Bộ (Admin phụ & Bảo vệ)
+// Trang Đăng Ký Tổng - Giao Diện Cấp Quyền & Khóa/Xóa Tài Khoản Nội Bộ
 
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Table, Badge } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom'; // Thêm useNavigate để làm nút Back
+import { useNavigate } from 'react-router-dom'; 
 import axios from 'axios';
 import { API_USERS } from '../../constants/api';
 
 function TrangDangKyTong() {
-  const navigate = useNavigate(); // Khai báo hook điều hướng
+  const navigate = useNavigate(); 
   
   const [danhSachUser, setDanhSachUser] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ function TrangDangKyTong() {
   const [role, setRole] = useState("Security");
   const [errors, setErrors] = useState({});
 
-  // Hàm tải toàn bộ danh sách tài khoản từ MockAPI 2
+  // Hàm tải toàn bộ danh sách tài khoản từ MockAPI
   const fetchAccounts = async () => {
     setLoading(true);
     try {
@@ -35,6 +35,38 @@ function TrangDangKyTong() {
   useEffect(() => {
     fetchAccounts();
   }, []);
+
+  // 🔥 THÊM MỚI: Logic xử lý Xóa tài khoản nhân sự
+  const handleXoaTaiKhoan = async (user) => {
+    // 1. Kiểm tra an toàn: Lấy thông tin admin đang đăng nhập hiện tại
+    const savedUser = localStorage.getItem("userHienTai");
+    const currentAdmin = savedUser ? JSON.parse(savedUser) : null;
+
+    if (user.id === "super-admin" || user.taiKhoan === "admin") {
+      alert(" Đây là tài khoản cứu hộ tối cao của hệ thống, không được phép xóa!");
+      return;
+    }
+
+    if (currentAdmin && (user.id === currentAdmin.id || user.taiKhoan === currentAdmin.taiKhoan)) {
+      alert("Bạn không thể tự xóa tài khoản chính mình khi đang đăng nhập!");
+      return;
+    }
+
+    // 2. Hiện hộp thoại xác nhận chắc chắn muốn xóa
+    if (!window.confirm(`BẠN CÓ CHẮC CHẮN MUỐN THU HỒI QUYỀN VÀ XÓA VĨNH VIỄN TÀI KHOẢN [${user.taiKhoan}]?`)) {
+      return;
+    }
+
+    try {
+      // Gửi yêu cầu DELETE lên MockAPI theo id định danh
+      await axios.delete(`${API_USERS}/${user.id}`);
+      alert(` Đã thu hồi quyền thành công! Tài khoản ${user.taiKhoan} đã bị xóa khỏi hệ thống.`);
+      fetchAccounts(); // Tải lại bảng dữ liệu mới nhất
+    } catch (err) {
+      console.error("Lỗi khi xóa tài khoản:", err);
+      alert(" Lỗi hệ thống, không thể xóa tài khoản này!");
+    }
+  };
 
   // Xử lý logic khi bấm nút Cấp Tài Khoản
   const handleRegisterTong = async (e) => {
@@ -68,7 +100,7 @@ function TrangDangKyTong() {
         ngayTao: new Date().toLocaleString('vi-VN')
       });
 
-      alert(`🎉 Cấp thành công tài khoản [${role}] cho nhân viên: ${nameChuan}`);
+      alert(` Cấp thành công tài khoản [${role}] cho nhân viên: ${nameChuan}`);
       
       setTaiKhoan("");
       setMatKhau("");
@@ -89,9 +121,9 @@ function TrangDangKyTong() {
         <Button 
           variant="outline-light" 
           className="rounded-pill px-4 fw-bold shadow-sm"
-          onClick={() => navigate('/admin')} // Ấn phát bay ngược về Trang Quản Lý luôn
+          onClick={() => navigate('/admin')} 
         >
-          ⬅️ Quay Lại Trang Quản Lý
+          Quay Lại Trang Quản Lý
         </Button>
       </div>
 
@@ -156,7 +188,7 @@ function TrangDangKyTong() {
                 >
                   <option value="Security">Security (Bảo vệ cổng bãi)</option>
                   <option value="Admin">Admin (Quản trị viên phụ)</option>
-                   <option value="User">User (Người dùng thông thường)</option>
+                  <option value="User">User (Người dùng thông thường)</option>
                 </Form.Select>
               </Form.Group>
 
@@ -182,25 +214,23 @@ function TrangDangKyTong() {
                   <tr style={{ color: '#94a3b8' }}>
                     <th>Tài Khoản</th>
                     <th>Họ Tên</th>
-                    <th>Mật Khẩu</th> {/* 👈 THÊM CỘT TIÊU ĐỀ MỚI */}
+                    <th>Mật Khẩu</th> 
                     <th>Vai Trò (Role)</th>
                     <th>Ngày Cấp Nick</th>
+                    <th>Hành Động</th> {/* 🔥 ĐÃ THÊM: Tiêu đề cột nút xóa */}
                   </tr>
                 </thead>
                 <tbody>
                   {danhSachUser.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="text-secondary py-4">Chưa có tài khoản nào được tạo!</td>
+                      <td colSpan="6" className="text-secondary py-4">Chưa có tài khoản nào được tạo!</td>
                     </tr>
                   ) : (
                     danhSachUser.map(user => (
                       <tr key={user.id} style={{ borderBottom: '1px solid #334155' }}>
                         <td className="fw-bold text-info">{user.taiKhoan}</td>
                         <td>{user.hoTen}</td>
-                        
-                        {/* 👈 HIỂN THỊ MẬT KHẨU TRỰC TIẾP TẠI ĐÂY */}
                         <td className="text-warning font-monospace fw-bold">{user.matKhau}</td>
-                        
                         <td>
                           <Badge 
                             bg={user.role === 'Admin' ? 'danger' : user.role === 'Security' ? 'warning' : 'success'} 
@@ -211,6 +241,19 @@ function TrangDangKyTong() {
                           </Badge>
                         </td>
                         <td className="text-secondary small">{user.ngayTao || "Ban đầu"}</td>
+                        
+                        {/* 🔥 THÊM MỚI: Ô nút xóa tài khoản */}
+                        <td>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm" 
+                            className="fw-bold px-2 py-1"
+                            style={{ borderRadius: '6px' }}
+                            onClick={() => handleXoaTaiKhoan(user)}
+                          >
+                            Xóa
+                          </Button>
+                        </td>
                       </tr>
                     ))
                   )}
