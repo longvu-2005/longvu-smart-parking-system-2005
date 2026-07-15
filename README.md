@@ -1,4 +1,4 @@
-# Getting Started with Create React App-# LongVu Smart Parking - Branch Conflict
+# Getting Started with Create React App-# LongVu Smart Parking - Main Branch
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
